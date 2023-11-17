@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-// Middleware to authenticate JWT
+
 const authenticateJWT = (req, res, next) => {
   const token = req.header("Authorization");
 
@@ -25,19 +25,19 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 
-// Register user
+
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Check if the user already exists
+    
     const existingUser = await User.findOne({ username });
 
     if (existingUser) {
       return res.status(409).json({ error: "Username already exists" });
     }
 
-    // Hash the password before saving it to the database
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
@@ -52,7 +52,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Get all users
+
 router.get("/all", async (req, res) => {
   try {
     const users = await User.find();
@@ -62,48 +62,45 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// User login
+
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Find the user by username
+   
     const user = await User.findOne({ username });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Compare entered password with the hashed password in the database
+    
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    // Generate a token (you might want to use a more secure method for a production environment)
+    
     const token = jwt.sign(
       { userId: user._id, username: user.username },
       "your-secret-key",
       {
-        expiresIn: "1h", // Token expires in 1 hour
+        expiresIn: "1h", 
       }
     );
 
-    // Send the token in the response
+    
     res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Home route
+
 router.get("/home", authenticateJWT, (req, res) => {
   try {
-    // If the control reaches here, it means the user is authenticated
-    // You can access the user information from req.user
-
-    // For example, if you want to send a personalized message:
+   
     const userID = res.user.userId;
     res.status(200).json({ message: `Hello ${userID}` });
   } catch (error) {
